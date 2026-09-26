@@ -242,7 +242,7 @@ class StripeAdapter(BaseIntegration):
             try:
                 headers = {"Authorization": f"Bearer {self.stripe_api_key}"}
                 params = {"limit": limit}
-                with httpx.Client(timeout=self.timeout_seconds) as client:
+                with httpx.Client(timeout=min(self.timeout_seconds, 2.0)) as client:
                     resp = client.get("https://api.stripe.com/v1/charges", headers=headers, params=params)
                     if resp.status_code == 200:
                         data = resp.json().get("data", [])

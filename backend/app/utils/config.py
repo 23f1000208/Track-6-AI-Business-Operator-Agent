@@ -53,8 +53,8 @@ class Settings(BaseSettings):
     # Safety & Agent Loop Boundaries
     MAX_AGENT_STEPS: int = 25
     MAX_TOOL_RETRIES: int = 3
-    TOOL_TIMEOUT_SECONDS: int = 30
-    WORKFLOW_TIMEOUT_SECONDS: int = 180
+    TOOL_TIMEOUT_SECONDS: int = 2
+    WORKFLOW_TIMEOUT_SECONDS: int = 60
 
     # Business Rules Thresholds (Deterministic Python)
     SLA_PENDING_DAYS_THRESHOLD: int = 3

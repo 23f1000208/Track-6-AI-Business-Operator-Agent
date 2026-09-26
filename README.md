@@ -64,16 +64,85 @@ flowchart TD
 
 ---
 
-## 🔌 Connected Swytchcode Business Tools
+---
 
-| Provider | Swytchcode Library | Auth Mode | Status | Real Capabilities |
+## 🌐 Swytchcode Gateway Architecture (Track 6 Core)
+
+The **Swytchcode Gateway** serves as OpsPilot AI's central nervous system, bridging Google ADK agent reasoning to live enterprise SaaS platforms via the **Model Context Protocol (MCP)** and local encrypted provider bundles.
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                          OpsPilot Agent Loop                           │
+│              (Google ADK + Gemini 2.5 Flash + Python Core)             │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ Tool Invocations
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                   Swytchcode MCP & Adapter Gateway                     │
+│         URL: http://127.0.0.1:5476/sse | Config: ~/.swytchcode/        │
+├───────────────────┬───────────────────┬────────────────────────────────┤
+│  Stripe Gateway   │   Gmail Gateway   │         Slack Gateway          │
+│  (Charges, ACH,   │ (Dunning Emails,  │      (P1 Alerts, Incident      │
+│   PaymentIntents) │  Client Notices)  │       Channels, Notices)       │
+├───────────────────┼───────────────────┼────────────────────────────────┤
+│   Jira Gateway    │  Notion Gateway   │         PayPal Gateway         │
+│ (Remediation Ops, │ (Audit Ledgers,   │      (Cross-Gateway Hash       │
+│  P1 SLA Tickets)  │  Reconciliation)  │       Reconciliation)          │
+└───────────────────┴───────────────────┴────────────────────────────────┘
+                                    │
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│              Live SaaS APIs & Encrypted Credential Vault               │
+│        (Encrypted ~/.swytchcode/credentials.db - Zero Key Leak)        │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1. Swytchcode Provider Lifecycle & Tooling Setup
+All providers are registered declaratively in `~/.swytchcode/tooling.json` and authenticated locally:
+
+```bash
+# 1. Fetch official provider bundles
+swy get Stripe
+swy get Gmail
+swy get Slack
+swy get Jira
+swy get Notion
+
+# 2. Add providers to active workspace tooling
+swy add provider Stripe.stripe@1.0.0
+swy add provider Gmail.gmail@v1
+swy add provider Slack.slack@1.7.0
+swy add provider Jira.jira@v1
+swy add provider Notion.notion@2.0.0
+
+# 3. Authenticate securely (Browser OAuth2 or Encrypted API Key)
+swy auth connect Stripe
+swy auth connect Gmail
+swy auth connect Slack
+swy auth connect Jira
+swy auth connect Notion
+
+# 4. Launch Swytchcode MCP Server (HTTP / SSE Transport)
+swy mcp serve --transport http --port 5476
+```
+
+### 2. Multi-API Connection Matrix (5 Live Connected APIs)
+OpsPilot AI connects **5 active Swytchcode APIs** in a single autonomous execution loop (exceeding the Track 6 benchmark requirement of $\ge 3$ APIs):
+
+| Provider | Swytchcode Library | Transport & Auth | Status | Live Gateway Capabilities |
 | :--- | :--- | :--- | :--- | :--- |
-| **Stripe** | `Stripe.stripe@1.0.0` | API Key | `CONNECTED` | `retrieve_charges`, `search_payment_intents`, `get_charge_details` |
-| **Gmail** | `Gmail.gmail@v1` | OAuth2 | `CONNECTED` | `send_email`, `draft_email`, `search_messages`, `read_message` |
-| **Slack** | `Slack.slack@1.7.0` | OAuth2 | `CONNECTED` | `send_message`, `notify_channel`, `search_messages` |
-| **Jira** | `Jira.jira@v1` | OAuth2 | `CONNECTED` | `create_issue`, `search_issues`, `update_issue`, `get_issue` |
-| **Notion** | `Notion.notion@2.0.0` | OAuth2 | `CONNECTED` | `create_page`, `update_record`, `search_pages`, `read_page` |
-| **PayPal** | `PayPal.paypal` | Sandbox | `DEMO MODE` | *High-fidelity sandbox fallback* |
+| **Stripe** | `Stripe.stripe@1.0.0` | API Key (Encrypted Vault) | `CONNECTED` (`is_live: true`) | `retrieve_charges`, `search_payment_intents`, `get_charge_details`, `check_balance` |
+| **Gmail** | `Gmail.gmail@v1` | OAuth2 (Google Workspace) | `CONNECTED` (`is_live: true`) | `send_email`, `draft_email`, `search_messages`, `read_message` |
+| **Slack** | `Slack.slack@1.7.0` | OAuth2 (Enterprise Grid) | `CONNECTED` (`is_live: true`) | `send_message`, `notify_channel`, `search_messages` |
+| **Jira** | `Jira.jira@v1` | OAuth2 (Atlassian Cloud) | `CONNECTED` (`is_live: true`) | `create_issue`, `search_issues`, `update_issue`, `get_issue` |
+| **Notion** | `Notion.notion@2.0.0` | OAuth2 (Notion Workspace) | `CONNECTED` (`is_live: true`) | `create_page`, `update_record`, `search_pages`, `read_page` |
+| **PayPal** | `PayPal.paypal` | Client Secret | `DEMO MODE` (`is_live: false`)| *High-fidelity sandbox fallback for multi-gateway reconciliation* |
+
+### 3. Dual-Mode Abstract Adapter Pattern (`BaseIntegration`)
+To guarantee resilient live presentations and continuous CI/CD evaluation:
+- **Live Production Mode (`is_live: true`)**: When Swytchcode credentials exist in `~/.swytchcode/credentials.db`, requests dispatch live across real SaaS production/sandbox endpoints.
+- **High-Fidelity Sandbox Fallback (`DEMO MODE`)**: If network rate-limits or offline conditions occur, adapters automatically utilize realistic enterprise datasets (`CloudScale Inc`, `Acme Industrial Corp`, `Global Tech Logistics`) executing through the exact same deterministic Python rules without pipeline termination.
+- **Transparent Status Labeling**: The UI transparently displays `CONNECTED` (green) vs `DEMO MODE` (indigo) at `/integrations`. It never deceptively fakes connection status.
 
 ---
 

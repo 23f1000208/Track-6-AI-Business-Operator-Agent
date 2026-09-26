@@ -37,7 +37,7 @@ class NotionAdapter(BaseIntegration):
         Records business operations summary to Notion knowledge base.
         """
         # Live Swytchcode Call if active
-        if self.is_configured() and not settings.DEMO_MODE:
+        if self.is_configured() and settings.has_swytchcode_key and not settings.DEMO_MODE:
             try:
                 headers = {
                     "Authorization": f"Bearer {settings.SWYTCHCODE_API_KEY}",
@@ -48,7 +48,7 @@ class NotionAdapter(BaseIntegration):
                     "category": category,
                     "properties": content
                 }
-                with httpx.Client(timeout=self.timeout_seconds) as client:
+                with httpx.Client(timeout=min(self.timeout_seconds, 2.0)) as client:
                     resp = client.post(f"{settings.SWYTCHCODE_BASE_URL}/notion/pages", headers=headers, json=payload)
                     if resp.status_code in [200, 201]:
                         res = resp.json()

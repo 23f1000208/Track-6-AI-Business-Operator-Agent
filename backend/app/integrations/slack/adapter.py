@@ -38,7 +38,7 @@ class SlackAdapter(BaseIntegration):
         Posts operational alert to designated Slack channel.
         """
         # Live Swytchcode Call if active
-        if self.is_configured() and not settings.DEMO_MODE:
+        if self.is_configured() and settings.has_swytchcode_key and not settings.DEMO_MODE:
             try:
                 headers = {
                     "Authorization": f"Bearer {settings.SWYTCHCODE_API_KEY}",
@@ -50,7 +50,7 @@ class SlackAdapter(BaseIntegration):
                     "severity": severity,
                     "incident_id": incident_id
                 }
-                with httpx.Client(timeout=self.timeout_seconds) as client:
+                with httpx.Client(timeout=min(self.timeout_seconds, 2.0)) as client:
                     resp = client.post(f"{settings.SWYTCHCODE_BASE_URL}/slack/message", headers=headers, json=payload)
                     if resp.status_code in [200, 201]:
                         res = resp.json()

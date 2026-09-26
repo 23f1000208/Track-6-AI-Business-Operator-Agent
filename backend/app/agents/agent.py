@@ -199,7 +199,7 @@ class OpsPilotAgent:
                 yield {"type": "STEP_UPDATE", "step": step.model_dump(), "state": state.model_dump()}
 
                 # Execute specific tool based on tool_name
-                await asyncio.sleep(0.4)  # Small realistic latency for visible live stream
+                await asyncio.sleep(0.05)  # Fast live stream update
                 tool_start = time.time()
 
                 try:

@@ -47,8 +47,12 @@ async def run_agent(request: AgentRunRequest):
     raise HTTPException(status_code=500, detail="Workflow did not complete normally.")
 
 
+@router.get("/runs/stream")
 @router.get("/runs/{run_id}/stream")
-async def stream_agent_execution(run_id: str = None, prompt: str = "Find failed and pending customer payments, determine which ones require action, create tasks for the finance team, contact the relevant customers, notify the ops team, update our business ops record, and give me a concise executive summary."):
+async def stream_agent_execution(
+    run_id: str = "live",
+    prompt: str = "Find failed and pending customer payments, determine which ones require action, create tasks for the finance team, contact the relevant customers, notify the ops team, update our business ops record, and give me a concise executive summary."
+):
     """
     Server-Sent Events (SSE) streaming endpoint for live execution trace.
     """
@@ -59,7 +63,7 @@ async def stream_agent_execution(run_id: str = None, prompt: str = "Find failed 
             elif event["type"] == "RUN_COMPLETED":
                 ACTIVE_RUNS[event["run_id"]] = event["state"]
 
-            payload = json.dumps(event)
+            payload = json.dumps(event, default=str)
             yield f"data: {payload}\n\n"
             await asyncio.sleep(0.05)
 
